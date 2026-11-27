@@ -28,28 +28,35 @@ class AppServiceProvider extends ServiceProvider
         error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
         $previousHandler = set_error_handler(function ($level, $message, $file = '', $line = 0) use (&$previousHandler) {
-    if (
-        $level === E_DEPRECATED ||
-        $level === E_USER_DEPRECATED ||
-        str_contains($message, 'will be required in PHP 9.0')
-    ) {
-        return true;
-    }
+            if (
+                $level === E_DEPRECATED ||
+                $level === E_USER_DEPRECATED ||
+                str_contains($message, 'will be required in PHP 9.0')
+            ) {
+                return true;
+            }
 
-    return $previousHandler ? $previousHandler($level, $message, $file, $line) : false;
-    });
+            return $previousHandler ? $previousHandler($level, $message, $file, $line) : false;
+        });
 
-        View::composer('layouts.app', function ($view) {$currentUser = auth()->user();
-            $userName =$currentUser->name ?? 'Pengguna';
-            $userRole =$currentUser->role ?? 'petugas';
-            $userInitials = collect(explode(' ',$userName))
+        // Definisi RBAC Gates untuk memisahkan hak akses Admin dan Petugas
+        Gate::define('manage-users', fn (User $user): bool => $user->role === 'admin');
+        Gate::define('manage-categories', fn (User $user): bool => $user->role === 'admin');
+
+        View::composer('layouts.app', function ($view) {
+            $currentUser = auth()->user();
+            $userName = $currentUser->name ?? 'Pengguna';
+            $userRole = $currentUser->role ?? 'petugas';
+            $userInitials = collect(explode(' ', $userName))
                 ->filter()
                 ->take(2)
                 ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
                 ->implode('');
 
-            $lowStockBooks = collect();$overdueBorrowings = collect();
-            $latestActivities = collect();$activeMembersList = collect();
+            $lowStockBooks = collect();
+            $overdueBorrowings = collect();
+            $latestActivities = collect();
+            $activeMembersList = collect();
 
             try {
                 $lowStockBooks = Book::where('stock', '<=', 2)
