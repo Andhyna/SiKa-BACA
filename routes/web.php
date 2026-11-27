@@ -49,5 +49,6 @@ Route::middleware('auth')->group(function () {
     /* ZONA KHUSUS ADMIN (Dilindungi Gate manage-users) */
     Route::middleware('can:manage-users')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
+        Route::get('/users/{user}', fn () => abort(404))->name('users.show');
     });
 });
