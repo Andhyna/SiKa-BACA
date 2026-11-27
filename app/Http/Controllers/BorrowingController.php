@@ -7,6 +7,7 @@ use App\Models\Borrowing;
 use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BorrowingController extends Controller
 {
@@ -44,16 +45,17 @@ class BorrowingController extends Controller
             'quantity'  => 'required|integer|min:1',
         ]);
 
-        $book = Book::findOrFail($validated['book_id']);
+        DB::transaction(function () use ($validated) {
+            $book = Book::query()
+                ->lockForUpdate()
+                ->findOrFail($validated['book_id']);
 
-        // Aturan bisnis: tolak transaksi jika jumlah pinjaman melebihi stok tersedia
-        if ($book->stock < $validated['quantity']) {
-            return back()
-                ->withErrors(['quantity' => 'Stok buku tidak mencukupi. Stok tersedia: ' . $book->stock])
-                ->withInput();
-        }
+            if ($book->stock < $validated['quantity']) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Stok buku tidak mencukupi. Stok tersedia: ' . $book->stock,
+                ]);
+            }
 
-        DB::transaction(function () use ($validated, $book) {
             $borrowing = Borrowing::create([
                 'user_id'        => auth()->id(),
                 'member_id'      => $validated['member_id'],
@@ -72,6 +74,11 @@ class BorrowingController extends Controller
 
         return redirect()->route('borrowings.index')
             ->with('success', 'Transaksi peminjaman berhasil disimpan dan stok buku telah diperbarui.');
+    }
+
+    public function update(Borrowing $borrowing)
+    {
+        return $this->returnBook($borrowing);
     }
 
     /**

@@ -36,6 +36,7 @@ class BookController extends Controller
             'category_id' => 'required|exists:categories,id',
             'title'       => 'required|string|max:255',
             'author'      => 'required|string|max:255',
+            'publisher'   => 'nullable|string|max:255',
             'year'        => 'required|integer|min:1900|max:2099',
             'stock'       => 'required|integer|min:0',
         ]);
@@ -81,6 +82,7 @@ class BookController extends Controller
             'category_id' => 'required|exists:categories,id',
             'title'       => 'required|string|max:255',
             'author'      => 'required|string|max:255',
+            'publisher'   => 'nullable|string|max:255',
             'year'        => 'required|integer|min:1900|max:2099',
             'stock'       => 'required|integer|min:0',
         ]);
@@ -93,6 +95,10 @@ class BookController extends Controller
 
     public function destroy(Book $book)
     {
+        if ($book->borrowingDetails()->exists()) {
+            return back()->with('error', 'Buku tidak dapat dihapus karena tercatat dalam riwayat peminjaman.');
+        }
+
         $book->delete();
 
         return redirect()->route('books.index')

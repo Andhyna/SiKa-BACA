@@ -87,6 +87,10 @@ class UserController extends Controller
             return back()->with('error', 'Anda tidak dapat menghapus akun yang sedang digunakan.');
         }
 
+        if ($user->borrowings()->exists()) {
+            return back()->with('error', 'Pengguna tidak dapat dihapus karena tercatat sebagai petugas pada riwayat transaksi sirkulasi.');
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')

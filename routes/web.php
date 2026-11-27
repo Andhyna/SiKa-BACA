@@ -33,7 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('members', MemberController::class);
 
     // Modul Peminjaman / Sirkulasi
-    Route::resource('borrowings', BorrowingController::class);
+    Route::resource('borrowings', BorrowingController::class)
+        ->only(['index', 'create', 'store', 'update']);
 
     // Modul Kategori: Tulis hanya untuk Admin, Lihat untuk Admin & Petugas
     Route::middleware('can:manage-categories')->group(function () {

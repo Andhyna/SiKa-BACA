@@ -75,6 +75,10 @@ class MemberController extends Controller
 
     public function destroy(Member $member)
     {
+        if ($member->borrowings()->exists()) {
+            return back()->with('error', 'Data anggota tidak dapat dihapus karena memiliki riwayat peminjaman.');
+        }
+
         $member->delete();
 
         return redirect()->route('members.index')

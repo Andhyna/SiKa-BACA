@@ -144,5 +144,114 @@ class ExampleTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_borrowing_can_be_created_and_stock_is_decremented(): void
+    {
+        $petugas = User::factory()->create([
+            'role' => 'petugas',
+        ]);
+
+        $category = Category::query()->create([
+            'name' => 'Umum',
+        ]);
+
+        $book = Book::query()->create([
+            'category_id' => $category->id,
+            'title' => 'Clean Code',
+            'author' => 'Robert C. Martin',
+            'year' => 2008,
+            'stock' => 3,
+        ]);
+
+        $member = Member::query()->create([
+            'member_code' => 'MBR-002',
+            'name' => 'Budi Santoso',
+            'phone' => '081299990000',
+        ]);
+
+        $response = $this->actingAs($petugas)->post('/borrowings', [
+            'member_id' => $member->id,
+            'book_id' => $book->id,
+            'quantity' => 2,
+        ]);
+
+        $response->assertRedirect('/borrowings');
+        $this->assertSame(1, $book->fresh()->stock);
+    }
+
+    public function test_borrowing_update_processes_return_and_restores_stock(): void
+    {
+        $petugas = User::factory()->create([
+            'role' => 'petugas',
+        ]);
+
+        $category = Category::query()->create([
+            'name' => 'Teknik',
+        ]);
+
+        $book = Book::query()->create([
+            'category_id' => $category->id,
+            'title' => 'Refactoring',
+            'author' => 'Martin Fowler',
+            'year' => 2018,
+            'stock' => 1,
+        ]);
+
+        $member = Member::query()->create([
+            'member_code' => 'MBR-003',
+            'name' => 'Siti Nurhaliza',
+        ]);
+
+        $this->actingAs($petugas)->post('/borrowings', [
+            'member_id' => $member->id,
+            'book_id' => $book->id,
+            'quantity' => 1,
+        ]);
+
+        $this->assertSame(0, $book->fresh()->stock);
+
+        $borrowing = \App\Models\Borrowing::first();
+
+        $response = $this->actingAs($petugas)->put("/borrowings/{$borrowing->id}");
+
+        $response->assertRedirect('/borrowings');
+        $this->assertSame('returned', $borrowing->fresh()->status);
+        $this->assertSame(1, $book->fresh()->stock);
+    }
+
+    public function test_cannot_delete_book_with_borrowing_history(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $category = Category::query()->create([
+            'name' => 'Sejarah',
+        ]);
+
+        $book = Book::query()->create([
+            'category_id' => $category->id,
+            'title' => 'Indonesia Merdeka',
+            'author' => 'Bung Hatta',
+            'year' => 1945,
+            'stock' => 2,
+        ]);
+
+        $member = Member::query()->create([
+            'member_code' => 'MBR-004',
+            'name' => 'Dewi Sartika',
+        ]);
+
+        $this->actingAs($admin)->post('/borrowings', [
+            'member_id' => $member->id,
+            'book_id' => $book->id,
+            'quantity' => 1,
+        ]);
+
+        $response = $this->actingAs($admin)->delete("/books/{$book->id}");
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('books', ['id' => $book->id]);
+    }
 }
 
