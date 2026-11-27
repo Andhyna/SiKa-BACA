@@ -20,6 +20,11 @@ class ExampleTest extends TestCase
         $response->assertRedirect('/dashboard');
     }
 
+    public function test_application_uses_wib_timezone(): void
+    {
+        $this->assertSame('Asia/Jakarta', config('app.timezone'));
+    }
+
     public function test_login_screen_can_be_rendered(): void
     {
         $response = $this->get('/login');
