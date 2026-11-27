@@ -150,6 +150,17 @@ class ExampleTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_invalid_category_path_returns_not_found(): void
+    {
+        $petugas = User::factory()->create([
+            'role' => 'petugas',
+        ]);
+
+        $response = $this->actingAs($petugas)->get('/categories/edit');
+
+        $response->assertNotFound();
+    }
+
     public function test_borrowing_can_be_created_and_stock_is_decremented(): void
     {
         $petugas = User::factory()->create([

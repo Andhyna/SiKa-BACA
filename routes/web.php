@@ -40,10 +40,17 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:manage-categories')->group(function () {
         Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
-        Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
-        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
-        Route::patch('/categories/{category}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])
+            ->whereNumber('category')
+            ->name('categories.edit');
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])
+            ->whereNumber('category')
+            ->name('categories.update');
+        Route::patch('/categories/{category}', [CategoryController::class, 'update'])
+            ->whereNumber('category');
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])
+            ->whereNumber('category')
+            ->name('categories.destroy');
     });
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
