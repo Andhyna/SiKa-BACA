@@ -9,6 +9,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/books', [BookController::class, 'index']);
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/members', [MemberController::class, 'index']);
+Route::get('/books', [BookController::class, 'index'])->name('books.index');
+Route::get('/books/{id}', [BookController::class, 'show'])->name('books.show');
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/members', [MemberController::class, 'index'])->name('members.index');
