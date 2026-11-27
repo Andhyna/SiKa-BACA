@@ -6,15 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    
+    public function up()
     {
-        if (Schema::hasTable('books')) {
-            return;
-        }
-
         Schema::create('books', function (Blueprint $table) {
             $table->id();
             $table->string('title');
@@ -24,12 +18,9 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
+    
     public function down(): void
     {
-        // Table existed before this migration; do not delete existing library data.
+        Schema::dropIfExists('books');
     }
 };
